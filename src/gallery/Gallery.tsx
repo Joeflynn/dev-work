@@ -25,6 +25,9 @@ export function Gallery() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [article, setArticle] = useState<number | null>(null)
   const [live, setLive] = useState<number | null>(null)
+  // The live item whose canvas has fully faded in. Its preview is hidden then:
+  // transparent artboards would otherwise show the still frame through.
+  const [drawn, setDrawn] = useState<number | null>(null)
   const closable = article !== null || live !== null
 
   useEffect(() => {
@@ -72,19 +75,37 @@ export function Gallery() {
             background: p.rive?.bg,
           }}
         >
-          <img
-            src={p.src}
-            alt=""
-            draggable={false}
-            decoding="async"
-            className={
-              p.rive?.art
-                ? "pointer-events-none absolute object-contain"
-                : "pointer-events-none size-full object-cover"
-            }
-            style={p.rive?.art ? boxStyle(p.rive.art, p) : undefined}
-          />
-          {live === i && <RivePlayer photo={p} />}
+          {p.rive ? (
+            // Rive content sits 24px in from the card edge (at its open size;
+            // the inset scales with the card everywhere else).
+            <div className="absolute inset-6">
+              <img
+                src={p.src}
+                alt=""
+                draggable={false}
+                decoding="async"
+                className="pointer-events-none absolute object-contain"
+                style={{
+                  ...boxStyle(p.rive.art, p),
+                  visibility: live === i && drawn === i ? "hidden" : undefined,
+                }}
+              />
+              {live === i && (
+                <RivePlayer
+                  photo={p}
+                  onReady={(r) => setDrawn(r ? i : null)}
+                />
+              )}
+            </div>
+          ) : (
+            <img
+              src={p.src}
+              alt=""
+              draggable={false}
+              decoding="async"
+              className="pointer-events-none size-full object-cover"
+            />
+          )}
         </button>
       ))}
 

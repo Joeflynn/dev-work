@@ -14,10 +14,21 @@ RuntimeLoader.setWasmFallbackUrl(riveFallbackWasm)
  * open; it fades in over the preview image once the first frame is drawn, and
  * is torn down (WebGL context and all) as soon as the item starts to close.
  */
-export function RivePlayer({ photo }: { photo: Photo }) {
+export function RivePlayer({
+  photo,
+  onReady,
+}: {
+  photo: Photo
+  /** Told when the live canvas has fully faded in, and again on teardown. */
+  onReady?: (ready: boolean) => void
+}) {
   const spec = photo.rive!
   const ref = useRef<HTMLCanvasElement>(null)
   const [ready, setReady] = useState(false)
+  const onReadyRef = useRef(onReady)
+  useEffect(() => {
+    onReadyRef.current = onReady
+  })
 
   useEffect(() => {
     const canvas = ref.current!
@@ -61,6 +72,7 @@ export function RivePlayer({ photo }: { photo: Photo }) {
     return () => {
       ro.disconnect()
       r.cleanup()
+      onReadyRef.current?.(false)
     }
   }, [spec])
 
@@ -72,6 +84,9 @@ export function RivePlayer({ photo }: { photo: Photo }) {
       style={{
         ...boxStyle(spec.canvas ?? spec.art, photo),
         opacity: ready ? 1 : 0,
+      }}
+      onTransitionEnd={(e) => {
+        if (e.propertyName === "opacity" && ready) onReadyRef.current?.(true)
       }}
     />
   )

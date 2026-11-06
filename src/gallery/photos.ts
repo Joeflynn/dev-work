@@ -81,6 +81,8 @@ function full(
     rive: {
       src: `${BASE}${slug}.riv`,
       stateMachine: "State Machine 1",
+      // Shows in the 24px padding around every animation.
+      bg: WIDGET_BG,
       ...rive,
     },
   }
@@ -95,7 +97,7 @@ function widget(
   art: Box,
   rive: Omit<RiveSpec, "src" | "art"> = {}
 ): Photo {
-  return full(slug, title, width, height, { art, bg: WIDGET_BG, ...rive })
+  return full(slug, title, width, height, { art, ...rive })
 }
 
 /**
@@ -152,6 +154,5 @@ export const PHOTOS: Photo[] = [
     artboard: "Pixel",
     gpu: true,
   }),
-  // Transparent artboard: give it the same backdrop the preview was shot on.
-  full("funn", "Funn", 500, 500, { bg: WIDGET_BG }),
+  full("funn", "Funn", 500, 500),
 ]
