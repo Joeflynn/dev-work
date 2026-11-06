@@ -151,7 +151,7 @@ export const PHOTOS: Photo[] = [
     }
   ),
   full("liquid-glass", "Liquid glass", 280, 232, {
-    artboard: "Pixel",
+    artboard: "Main",
     gpu: true,
   }),
   full("funn", "Funn", 500, 500),
