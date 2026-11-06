@@ -5,7 +5,6 @@ import { ArticleView } from "./ArticleView"
 import { GalleryController, type Mode } from "./controller"
 import { boxStyle, PHOTOS } from "./photos"
 import { RivePlayer } from "./RivePlayer"
-import { ValuesPanel } from "./ValuesPanel"
 
 /**
  * React renders the DOM once. After mount, GalleryController owns every
@@ -16,13 +15,9 @@ export function Gallery() {
   const stageRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([])
   const captionRef = useRef<HTMLDivElement>(null)
-  const counterRef = useRef<HTMLSpanElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const readouts = useRef<Record<string, HTMLElement | null>>({})
   const articleRefs = useRef<(HTMLElement | null)[]>([])
   const controller = useRef<GalleryController | null>(null)
   const [mode, setMode] = useState<Mode>("grid")
-  const [panelOpen, setPanelOpen] = useState(false)
   const [article, setArticle] = useState<number | null>(null)
   const [live, setLive] = useState<number | null>(null)
   // The live item whose canvas has fully faded in. Its preview is hidden then:
@@ -37,9 +32,9 @@ export function Gallery() {
         stage: stageRef.current!,
         cards: cardRefs.current.filter(Boolean) as HTMLElement[],
         caption: captionRef.current!,
-        counter: counterRef.current,
-        panel: panelRef.current,
-        readouts: readouts.current,
+        counter: null,
+        panel: null,
+        readouts: {},
         articles: PHOTOS.map((_, i) => articleRefs.current[i] ?? null),
       },
       {
@@ -131,18 +126,6 @@ export function Gallery() {
 
       <div
         data-ui
-        className="pointer-events-none absolute top-4 left-5 z-50 flex items-baseline gap-3 font-mono text-[11px] text-muted-foreground"
-      >
-        <span
-          ref={counterRef}
-          className="tabular-nums"
-          style={{ opacity: 0 }}
-          aria-hidden
-        />
-      </div>
-
-      <div
-        data-ui
         className="absolute top-4 right-4 z-50 flex items-center gap-2"
       >
         <button
@@ -171,25 +154,7 @@ export function Gallery() {
             <LayoutGrid className="size-4" strokeWidth={1.75} />
           )}
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            const next = !panelOpen
-            setPanelOpen(next)
-            controller.current?.setPanel(next)
-          }}
-          aria-expanded={panelOpen}
-          className="h-9 rounded-full bg-popover px-5 font-mono text-[11px] text-popover-foreground shadow-[0_1px_2px_rgb(0_0_0/0.06),0_4px_12px_-4px_rgb(0_0_0/0.16)] ring-1 ring-foreground/5 transition-transform duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 active:scale-[0.96]"
-        >
-          Values
-        </button>
       </div>
-
-      <ValuesPanel
-        panelRef={panelRef}
-        readouts={readouts}
-        controller={controller}
-      />
     </div>
   )
 }
