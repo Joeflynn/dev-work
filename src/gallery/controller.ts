@@ -216,6 +216,8 @@ const PAGE_VELOCITY_COMMIT = 0.3 // px/ms, horizontal, for paging
 const SCROLL_PROJECTION_MS = 320
 const SCRUB_PROJECTION_MS = 240
 const RADIUS = 6
+/** p past which an open Rive item mounts its live player. */
+const LIVE_AT = 0.9
 
 export interface Elements {
   stage: HTMLElement
@@ -330,6 +332,9 @@ export class GalleryController {
   private onModeChange?: (m: Mode) => void
   private onArticleChange?: (i: number | null) => void
   private articleShown: number | null = null
+  private onLiveChange?: (i: number | null) => void
+  /** The Rive item whose player is mounted, or null. */
+  private liveShown: number | null = null
   private articleH: number[] = []
   private articleParts: HTMLElement[][] = []
   private styleCache = new WeakMap<HTMLElement, Record<string, string>>()
@@ -345,12 +350,15 @@ export class GalleryController {
     opts: {
       onModeChange?: (m: Mode) => void
       onArticleChange?: (i: number | null) => void
+      /** A Rive item has (nearly) landed open, or closed. */
+      onLiveChange?: (i: number | null) => void
     } = {}
   ) {
     this.photos = photos
     this.el = el
     this.onModeChange = opts.onModeChange
     this.onArticleChange = opts.onArticleChange
+    this.onLiveChange = opts.onLiveChange
     this.articleParts = el.articles.map((a) =>
       a ? Array.from(a.querySelectorAll<HTMLElement>("[data-part]")) : []
     )
@@ -906,6 +914,19 @@ export class GalleryController {
     this.renderArticles(P, qe, textX, textY)
     this.renderCounter(active, L)
     this.renderPanel()
+    this.renderLive(P)
+  }
+
+  /**
+   * Mount the Rive player once the open spring has nearly landed, and drop it
+   * the moment a close begins. Paging while open swaps it to the new item.
+   */
+  private renderLive(P: number) {
+    const i = this.openIndex
+    const live = this.isOpen && P > LIVE_AT && this.photos[i]?.rive ? i : null
+    if (live === this.liveShown) return
+    this.liveShown = live
+    this.onLiveChange?.(live)
   }
 
   private writeCard(i: number, r: Rect, W: number, H: number, z: number) {
@@ -1084,6 +1105,8 @@ export class GalleryController {
     if (e.pointerType === "mouse" && e.button !== 0) return
     const t = e.target as Element
     if (t.closest("[data-ui]")) return
+    // A live Rive canvas owns its own pointer input.
+    if (this.isOpen && t.closest("[data-rive-live]")) return
     const inArticle = this.articleOpen
     if (inArticle && t.closest("[data-article] :is(a, button, input)")) return
     // Mouse on article text selects it (the wheel scrolls). Touch and pen
@@ -1432,6 +1455,7 @@ export class GalleryController {
 
   private onWheel = (e: WheelEvent) => {
     if (e.ctrlKey) return
+    if (this.isOpen && (e.target as Element).closest("[data-rive-live]")) return
     e.preventDefault()
     const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? this.stage.h : 1
     const dx = e.deltaX * k
