@@ -53,7 +53,7 @@ export function Gallery() {
   return (
     <div
       ref={stageRef}
-      className="fixed inset-0 touch-none overflow-hidden bg-background select-none"
+      className="fixed inset-0 touch-none overflow-hidden  select-none  z-10"
     >
       {PHOTOS.map((p, i) => (
         <button
